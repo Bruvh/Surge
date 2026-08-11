@@ -1,6 +1,12 @@
+import type { Application } from 'express';
+import type { IncomingMessage, ServerResponse } from 'node:http';
 import app from '../artifacts/api-server/src/app';
 
-export default function handler(req: any, res: any) {
+type VercelRequest = IncomingMessage & { url?: string };
+
+type VercelResponse = ServerResponse;
+
+export default function handler(req: VercelRequest, res: VercelResponse) {
   if (!req.url) {
     req.url = '/api';
   } else if (!req.url.startsWith('/api')) {
@@ -12,7 +18,8 @@ export default function handler(req: any, res: any) {
     res.on('error', reject);
 
     try {
-      app(req, res);
+      const expressApp = app as Application;
+      expressApp(req, res);
     } catch (error) {
       reject(error);
     }

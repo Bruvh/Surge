@@ -1,0 +1,11 @@
+{
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    "types": ["node"]
+  },
+  "include": [
+    "**/*.ts",
+    "../artifacts/api-server/src/**/*.ts",
+    "../lib/api-zod/src/**/*.ts"
+  ]
+}

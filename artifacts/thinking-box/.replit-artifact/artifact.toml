@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "The Thinking Box"
+description = "A personal sidequest companion that turns overwhelming thoughts into tiny actionable wins, with daily chat history, a timeline, structured sparks, and future goals stored locally in the browser."
+version = "1.0.0"
+id = "artifacts/thinking-box"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 26011
+
+[services.development]
+run = "pnpm --filter @workspace/thinking-box run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/thinking-box", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/thinking-box/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "26011"
+BASE_PATH = "/"

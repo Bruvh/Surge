@@ -1,0 +1,126 @@
+Please build me a complete, single-file web application called "The Thinking Box" using HTML, CSS, and Vanilla JavaScript. All data must be saved to the browser's localStorage. No backend or external databases are required for this MVP.
+
+## 1. OVERALL STYLE (Glassmorphism)
+- Use a full-screen gradient background (deep indigo/purple fading into soft blue or teal).
+- All cards, modals, and containers must use the glassmorphism effect:
+  - background: rgba(255, 255, 255, 0.12);
+  - backdrop-filter: blur(12px);
+  - -webkit-backdrop-filter: blur(12px);
+  - border: 1px solid rgba(255, 255, 255, 0.18);
+  - border-radius: 20px;
+  - box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
+- Text should be highly readable. Use a modern sans-serif font (Inter or system-ui). Use white or off-white text with subtle opacity for secondary text.
+- Buttons should have a soft glass effect with hover states that increase the background opacity.
+
+## 2. NAVIGATION TABS
+Create 4 main tabs at the top (or bottom) of the screen:
+1. **The Thinking Box** (Chat)
+2. **The Timeline** (Calendar)
+3. **Sparks** (Notes)
+4. **Future Goals** (Goals)
+
+## 3. DATA STRUCTURES (localStorage keys)
+Create the following structures in localStorage:
+- `app_active_quest`: { text: "string", dateStarted: "YYYY-MM-DD", status: "pending" }
+- `app_daily_chats`: { "YYYY-MM-DD": { prompt: "string", quest: "string", outcome: "completed/abandoned/pending", fullTranscript: [{role: "user/assistant", content: "string"}], summaryBullets: ["bullet1", "bullet2", "bullet3"] } }
+- `app_chat_draft`: { date: "YYYY-MM-DD", draftText: "string" }
+- `app_sparks_notes`: [ { id: "unique_id", title: "string", problem: "string", breakthrough: "string", oneLiner: "string", color: "#hex", hidden: boolean, createdAt: "ISO" } ]
+- `app_future_goals`: [ { id: "unique_id", text: "string", status: "active/completed/abandoned", createdAt: "ISO", resolvedAt: "ISO/null" } ]
+
+## 4. TAB 1: THE THINKING BOX (Chat Interface)
+This is the heart of the app.
+
+**Layout:**
+- At the very top, inside the glass card, display a sticky banner called **"⚔️ Active Quest"**. This shows the current `app_active_quest` text. If no quest is active, show "No active quest. Start a chat below!"
+- Below the banner is the chat history window (scrollable). Messages on the right are the user's (dark glass bubble), messages on the left are the AI's (lighter glass bubble).
+- At the bottom is the input area.
+
+**Input Area Features:**
+- A text input field.
+- A "Send" button.
+- A **"Surprise Me"** button (dice emoji). Clicking it auto-fills the input with a random prompt from this list: 
+  ["I'm avoiding something important.", "I feel scattered and overwhelmed.", "I need a small win today.", "I'm procrastinating on a specific task.", "I feel anxious about the future.", "I want to build a good habit.", "I'm stuck in a rut.", "I need to forgive myself for something."]
+- Three toggle chips next to the input: **🧠 Vent** (just listen, no quest), **🎯 Need Quest** (default), **🤔 Refine** (tweak existing quest).
+
+**Chat Logic (CRITICAL):**
+- When the user sends a message, the app must construct the AI prompt using this exact format:
+SYSTEM: [Insert the Master AI System Prompt found below]
+CONTEXT: [Insert yesterday's summaryBullets from app_daily_chats, if they exist. Format as bullet points.]
+USER: [Insert the user's current message]
+
+- The app must call a mock AI function. Since this is a static file, please write a realistic `generateAIResponse(system, context, user)` function that uses the `fetch` API to call `https://api.openai.com/v1/chat/completions` (or a free proxy). **For now, hardcode a realistic fallback response** in case the API key is missing, so the UI still works for demonstration. Structure the code so I can easily replace it with my own API key later.
+- The AI must follow the Master System Prompt strictly (give small quests, offer a "Shrink" option, triage venting).
+- **Daily Reset Rule**: When the app loads, check today's date. If the date has changed from the last saved chat date, automatically clear the chat history view (but keep the `app_daily_chats` record for the previous day). The `app_active_quest` should PERSIST across days until completed or abandoned.
+- **Draft Auto-Save**: Every keystroke in the input field saves to `app_chat_draft` for today's date. When the chat resets, clear the draft for the previous day.
+- **Completing a Quest**: If the user types "Done" or clicks a "Mark Done" button, update the `app_active_quest` status to "completed", log the full chat transcript to `app_daily_chats` for today, and run the **End-of-Day Summary** logic (generate 3 summary bullets based on the chat) and save them to today's record.
+- **Shrink Feature**: The AI should always include a "Shrink" suggestion. Add a clickable button next to the AI's quest response that says "Shrink". Clicking it resends the prompt to the AI with the extra instruction: "The user said this quest is too big. Make it even smaller and easier."
+
+## 5. TAB 2: THE TIMELINE (Calendar)
+- Display a monthly calendar grid (simple, no external libraries).
+- Highlight days that have a `app_daily_chats` entry.
+- When a user clicks on a past date, open a modal or expand a panel showing:
+- The original prompt for that day.
+- The final quest assigned.
+- The outcome (Completed/Abandoned/Pending).
+- A button that says **"View Full Chat"** which, when clicked, expands to show the entire `fullTranscript` array from that day (bubble by bubble).
+
+## 6. TAB 3: SPARKS (Notes)
+- A list of note cards. Each card displays the Title, Problem, Breakthrough, and 1-Liner.
+- **Add Note Button**: Opens a small glassmorphism modal with fields: Title, Problem, Breakthrough, 1-Liner, and a Color Picker.
+- **Hide/Unhide**: Each note has an eye icon. Hidden notes are visually collapsed (only show the title with a strikethrough or blur effect) but can be unhidden with a click.
+- **Randomize Button**: A button labeled "🎲 Surprise Me" that randomly pulls up one note from the list and highlights it/focuses on it in a popup.
+- Ensure the UI is far more structured and readable than Apple Notes—force the "Problem + Breakthrough" structure.
+
+## 7. TAB 4: FUTURE GOALS
+- A simple input field and "Add Goal" button.
+- Goals are displayed as individual "cards" in a grid/list.
+- Each goal card has two buttons: **✅ Complete** and **⛔ Abandon**.
+- When a goal is Completed or Abandoned, log that event onto the Calendar (create a special entry in `app_daily_chats` for today if one doesn't exist, with a note like "Goal Completed: X").
+- Active goals remain in this tab. Completed/Abandoned goals get archived (hidden but accessible via a toggle switch).
+
+## 8. THE MASTER AI SYSTEM PROMPT (Copy this EXACTLY into the JavaScript)
+
+You are "The Thinking Box", a practical, no-BS co-pilot for organizing chaos and leveling up in real life. You speak to young adults (17-25) who want to get their lives together without feeling like they're in therapy or a corporate boardroom.
+
+YOUR CORE JOB:
+Translate the user's raw thoughts, feelings, or ideas into a single, concrete "Sidequest"—a tiny, achievable action they can do today.
+
+THE GOLDEN RULES:
+
+Specific over Vague. Never say "practice mindfulness" or "work on your goals." Say "Put your phone in another room, set a 5-min timer, and write down 3 things you're worried about. Tear the paper up when done."
+
+Small over Big. When in doubt, make the quest laughably small. A 2-minute win beats a 2-hour failure.
+
+Negotiate, don't dictate. You are a collaborator. After suggesting a quest, always invite pushback. Example: "Accept this, or tell me to shrink it."
+
+Battery-Aware (Low/Medium/High). If the user sounds exhausted, give a "Low Battery" quest (e.g., "Just open the textbook. Close it. That's it."). If they sound energetic, give a "High Battery" quest.
+
+Triage Venting vs. Questing. If the user's text is heavily emotional (sad, angry, hopeless), DO NOT immediately assign a quest. First ask: "I hear you. Do you want a sidequest to help shift your mood, or do you just need me to sit with this and listen right now?" If they choose listen, simply reflect their feelings back without solving anything.
+
+HOW TO STRUCTURE YOUR RESPONSE:
+Always format your final reply with these clear sections:
+
+Acknowledgment: Briefly validate their feeling/idea (1 sentence max).
+
+The Sidequest: Bold, clear, actionable. Write it exactly as: "⚔️ Your Sidequest: [Action]".
+
+The "Shrink" Option: Explicitly tell them how to make it easier if they're overwhelmed.
+
+The Invite: End with "Accept, Shrink, or Abandon?"
+
+HANDLING PAST TOPICS (CRITICAL):
+You will be given a short summary of "Past Important Topics" from previous days. Use this ONLY to make a subtle, natural reference. DO NOT list their entire history back to them. Example of a good reference: "Seems like history homework has been a weight lately—wanna poke at that today, or tackle something fresh?" If the past topics are irrelevant to today's input, ignore them completely.
+
+END-OF-DAY SUMMARY RULE:
+At the very end of this conversation (or if the user marks a quest done), silently generate exactly 3 concise bullet points summarizing the key themes of TODAY'S chat. These bullets will be stored as "Past Important Topics" for tomorrow. Keep them factual and neutral (e.g., "- Struggled with history procrastination. - Avoided social invitation. - Felt better after walking.")
+
+text
+
+## 9. EXTRA UI/UX INSTRUCTIONS
+- Make the entire app fully responsive (mobile-first).
+- Use smooth animations for transitions between tabs and modals (fade-in/out).
+- The "Active Quest" banner should change color based on status: Yellow for Pending, Green for Completed, Red for Abandoned.
+- If a user tries to close the tab while a draft is unsaved, use the `beforeunload` event to warn them (optional but good).
+
+**Final Note:** Please write the entire code in a single `index.html` file with embedded `<style>` and `<script>` tags so I can run it immediately. Ensure all the JavaScript functions are clearly named and commented so I can easily find and modify them later.
+At the very end of this conversation (or if the user marks a quest done), silently generate exactly 3 concise bullet points summarizing the key themes of TODAY'S chat. These bullets will be stored as "Past Important Topics" for tomorrow. Keep them factual and neutral (e.g., "- Struggled with history procrastination. - Avoided social invitation. - Felt better after walking.")

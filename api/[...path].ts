@@ -1,4 +1,3 @@
-import type { Application } from 'express';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import app from '../artifacts/api-server/src/app';
 
@@ -18,8 +17,8 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
     res.on('error', reject);
 
     try {
-      const expressApp = app as Application;
-      expressApp(req, res);
+      const expressHandler = app as unknown as (req: VercelRequest, res: VercelResponse) => void;
+      expressHandler(req, res);
     } catch (error) {
       reject(error);
     }

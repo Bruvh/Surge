@@ -2,6 +2,11 @@
   "extends": "./tsconfig.base.json",
   "compileOnSave": false,
   "files": [],
+  "include": [
+    "api/**/*.ts",
+    "artifacts/api-server/src/**/*.ts",
+    "lib/api-zod/src/**/*.ts"
+  ],
   "references": [
     {
       "path": "./lib/db"
